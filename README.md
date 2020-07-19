@@ -1,5 +1,5 @@
 
-# pathview package
+# pathview R package
 
 [![](https://img.shields.io/badge/release%20version-1.28.1-blue.svg)](https://www.bioconductor.org/packages/pathview)
 [![](https://img.shields.io/badge/devel%20version-1.29.1-green.svg)](https://github.com/datapplab/pathview)
@@ -23,7 +23,7 @@ Luo W, Brouwer C. Pathview: an R/Biocondutor package for pathway-based data inte
 ## Installation
 
 ``` r
-# install from BioConductor
+# install from BioConductor (within R)
 if(!requireNamespace("BiocManager", quietly = TRUE))
     install.packages("BiocManager")
 BiocManager::install("pathview")
@@ -33,7 +33,7 @@ BiocManager::install("pathview")
 devtools::install_github("datapplab/pathview")
 ```
 
-## Quick start with demo data
+## Quick start with demo data (R code)
 
 ``` r
 library(pathview)
