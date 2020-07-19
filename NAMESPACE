@@ -1,0 +1,40 @@
+import(
+       KEGGgraph,
+       Rgraphviz,
+       KEGGREST,
+       methods,
+       graph
+       )
+
+importFrom(AnnotationDbi, mget, select, columns, keys)
+importClassesFrom(AnnotationDbi,AnnotationDb)
+importFrom(org.Hs.eg.db, org.Hs.eg.db)
+
+importFrom(png, readPNG)
+importFrom(utils, data, installed.packages, read.delim)
+importFrom(XML, xmlAttrs, xmlChildren, xmlName, xmlRoot, xmlTreeParse)
+importFrom(grDevices, col2rgb, dev.off, pdf, png, rgb)
+importFrom(graphics, image, layout, par, polygon,
+           rasterImage, rect, segments, text)
+importFrom(stats, IQR, rnorm)
+
+export(
+       download.kegg,
+       node.info,
+       combineKEGGnodes, reaction2edge,
+
+       node.map,
+       eg2id, id2eg, geneannot.map,
+       cpdkegg2name, cpdname2kegg, cpd2kegg, cpdidmap,
+       kegg.species.code,
+       mol.sum,
+       sim.mol.data,
+
+       node.color, col.key,
+       
+       wordwrap, strfit,
+
+       pathview,
+       keggview.native,
+       keggview.graph
+       )

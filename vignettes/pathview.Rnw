@@ -1,0 +1,634 @@
+%\VignetteIndexEntry{Pathview: pathway based data integration and visualization}
+%\VignetteDepends{org.Hs.eg.db}
+%\VignetteSuggests{gage, org.Mm.eg.db}
+%\VignettePackage{pathview}
+
+\documentclass[11pt]{article}
+
+\usepackage{times}
+\usepackage{hyperref}
+\usepackage{geometry}
+\usepackage{longtable}
+\usepackage[cm]{fullpage}
+\usepackage[pdftex]{graphicx}
+\usepackage[authoryear,round]{natbib}
+\usepackage{caption}
+\usepackage{subcaption}
+\SweaveOpts{keep.source=TRUE,eps=FALSE,pdf=TRUE,prefix=TRUE} 
+
+% R part
+\newcommand{\R}[1]{{\texttt{#1}}}
+\newcommand{\Rfunction}[1]{{\texttt{#1}}}
+\newcommand{\Robject}[1]{{\texttt{#1}}}
+\newcommand{\Rpackage}[1]{{\textit{#1}}}
+\newcommand{\Rclass}[1]{{\textit{#1}}}
+\newcommand{\Metas}[1]{{\texttt{#1}}}
+
+%float placement
+\renewcommand{\textfraction}{0.05}
+\renewcommand{\topfraction}{0.95}
+\renewcommand{\bottomfraction}{0.95}
+
+\begin{document}
+\setkeys{Gin}{width=0.8\textwidth}
+\title{Pathview: pathway based data integration and visualization }
+\author{Weijun Luo {\small(\href{mailto:luo\_weijun@yahoo.com}{luo\_weijun AT yahoo.com})}}
+
+
+\maketitle
+
+\begin{abstract}
+  In this vignette, we demonstrate the \Rpackage{pathview} package as a tool set for pathway based data integration and visualization. It maps and renders user data on relevant pathway graphs. All users need is to supply their gene or compound data and specify the target pathway. \Rpackage{Pathview} automatically downloads the pathway graph data, parses the data file, maps user data to the pathway, and renders pathway graph with the mapped data. Although built as a stand-alone program, \Rpackage{pathview} may seamlessly integrate with pathway and gene set (enrichment) analysis tools for a large-scale and fully automated analysis pipeline. In this vignette, we introduce common and advanced uses of \Rpackage{pathview}. We also cover package installation, data preparation, other useful features and common application errors. In \Rpackage{gage} package, vignette \href{http://bioconductor.org/packages/release/bioc/vignettes/gage/inst/doc/RNA-seqWorkflow.pdf}{"RNA-Seq Data Pathway and Gene-set Analysis Workflows"} demonstrates GAGE/Pathview workflows on RNA-seq (and microarray) pathway analysis.
+\end{abstract}
+
+
+\section{Cite our work}
+\label{sec:cite}
+Please cite the Pathview paper formally if you use this package. This will help to support the maintenance and growth of the open source project. 
+\\
+\\
+Weijun Luo and Cory Brouwer. Pathview: an R/Bioconductor package for pathway-based data integration and visualization. Bioinformatics, 29(14):1830-1831, 2013. \href{http://bioinformatics.oxfordjournals.org/content/29/14/1830.full}{doi: 10.1093/bioinformatics/btt285}.
+
+\section{Quick start with demo data}
+\label{sec:quick}
+This is the most basic use of \Rpackage{pathview}, please check the full description below for details. Here we assume that the input data are already read in R as in the demo examples. If you are not sure how to do so, you may check \hyperref[code:readin]{Section Common uses for data visualization} or \Rpackage{gage} secondary vignette, \href{http://bioconductor.org/packages/release/bioc/vignettes/gage/inst/doc/dataPrep.pdf}{"Gene set and data preparation"}. 
+
+<<synopsis1, echo=TRUE,  eval=FALSE>>=
+library(pathview)
+data(gse16873.d)
+pv.out <- pathview(gene.data = gse16873.d[, 1], pathway.id = "04110",
+                   species = "hsa", out.suffix = "gse16873")
+@ 
+
+If you have difficulties in using R in general, you may use the \href{https://pathview.uncc.edu/}{Pathview Web server: pathview.uncc.edu}. In addition to a user friendly access, \href{https://pathview.uncc.edu/}{the server} provides many extra useful features including \href{https://pathview.uncc.edu/example4}{a comprehensive pathway analysis workflow}. Please check \href{https://pathview.uncc.edu/overview}{the overview page} and \href{https://academic.oup.com/nar/article-lookup/doi/10.1093/nar/gkx372}{the NAR web server paper} \citep{luo:etal:2017} for details. 
+
+\section{New features}
+\label{sec:news}
+\Rpackage{Pathview} ($\ge1.5.4$) provides paths.hsa data, the full list of human pathway ID/names from KEGG, as to help user specify target pathway IDs when calling \R{pathview}. Please check \hyperref[subsec:paths]{Section Common uses} for details.
+\\
+\\
+\Rpackage{Pathview} ($\ge1.5.4$) adjust the definitions of 7 arguments for \R{pathview} function: \R{discrete, limit, bins, both.dirs, trans.fun, low, mid, high}. These arguments now accept 1- or 2-element vectors beside of 2-element lists. For example, limit=1 is equivalent to limit=list(gene=1, cpd=1), and bins=c(3, 10) is equivalent to bins=list(gene=3, cpd=10) etc. This would makes pathview easier to use.
+\\
+\\
+\Rpackage{Pathview} ($\ge1.1.6$) can plot/integrate/compare multiple states or samples in the same graph (\hyperref[subsec:multiple]{Subsection \ref*{subsec:multiple}}).
+\\
+\\
+\Rpackage{Pathview} ($\ge1.2.4$) work with all KEGG species (about 4800) plus KEGG Orthology (with \R{species="ko"}) (\hyperref[subsec:species]{Subsection \ref*{subsec:species}}).
+\\
+
+\section{Overview}
+\label{sec:overview}
+\Rpackage{Pathview} \citep{luo:etal:2013} is a stand-alone software package for pathway based data integration and visualization. This package can be divided into four functional modules: the Downloader, Parser, Mapper and Viewer. Mostly importantly, \Rpackage{pathview} maps and renders user data on relevant pathway graphs. 
+
+\Rpackage{Pathview} generates both native KEGG view (like \hyperref[fig:1]{Figure \ref*{fig:1}} in PNG format) and Graphviz view (like \hyperref[fig:2]{Figure \ref*{fig:2}} in PDF format) for pathways (\hyperref[sec:visualization]{Section \ref*{sec:visualization}}). KEGG view keeps all the meta-data on pathways, spacial and temporal information, tissue/cell types, inputs, outputs and connections. This is important for human reading and interpretation of pathway biology. Graphviz view provides better control of node and edge attributes, better view of pathway topology, better understanding of the pathway analysis statistics. Currently only KEGG pathways are implemented. Hopefully, pathways from Reactome, NCI and other databases will be supported in the future. Notice that KEGG requires subscription for FTP access since May 2011. However, \Rpackage{Pathview} downloads individual pathway graphs and data files through API or HTTP access, which is freely available (for academic and non-commerical uses). \Rpackage{Pathview} uses \Rpackage{KEGGgraph} \citep{zhang:etal:2009} when parsing KEGG xml data files.
+
+\Rpackage{Pathview} provides strong support for data integration (\hyperref[sec:integration]{Section \ref*{sec:integration}}). It works with: 1) essentially all types of biological data mappable to pathways, 2) over 10 types of gene or protein IDs, and 20 types of compound or metabolite IDs, 3) pathways for about 4800 species as well as KEGG orthology, 4) varoius data attributes and formats, i.e. continuous/discrete data, matrices/vectors, single/multiple samples etc.
+
+\Rpackage{Pathview} is open source, fully automated and error-resistant. Therefore, it seamlessly integrates with pathway or gene set (enrichment) analysis tools. In \hyperref[sec:workflow]{Section \ref*{sec:workflow}}, we will show an integrated analysis using \Rpackage{pathview} with anothr the Bioconductor \Rpackage{gage} package \citep{luo:etal:2009}, available from the \href{www.bioconductor.org/packages/release/bioc/html/gage.html}{Bioconductor website}.
+
+Note that although we use microarray data as example gene data in this vignette, Pathview is equally applicable to RNA-Seq data and other types of gene/protein centered high throughput data. The secondary vignette in \Rpackage{gage} package, \href{http://bioconductor.org/packages/release/bioc/vignettes/gage/inst/doc/RNA-seqWorkflow.pdf}{"RNA-Seq Data Pathway and Gene-set Analysis Workflows"}, demonstrates such applications.
+
+This vignette is written by assuming the user has minimal R/Bioconductor knowledge. Some descriptions and code chunks cover very basic usage of R. The more experienced users may simply omit these parts. 
+
+
+\section{Installation}
+\label{sec:installation}
+Assume R and Bioconductor have been correctly installed and accessible under current directory. Otherwise, please contact your system admin or follow the instructions on \href{http://www.r-project.org/}{R website} and \href{http://www.bioconductor.org/install/}{Bioconductor website}. Here I would strongly recommend users to install or upgrade to the latest verison of R (3.0.2+)/Bioconductor (2.14+) for simpler installation and better use of \Rpackage{Pathview}.
+
+Start R: from Linux/Unix command line, type \verb@R@ (Enter); for Mac or Windows GUI, double click the R application icon to enter R console.
+
+End R: type in \R{q()} when you are finished with the analysis using R, but not now.
+
+Two options:
+
+Simple way: install with Bioconductor (this included all dependencies automatically too):
+<<install, echo=TRUE, eval=FALSE>>=
+if (!requireNamespace("BiocManager", quietly=TRUE))
+    install.packages("BiocManager")
+BiocManager::install("pathview")
+@ 
+
+Or a bit more complex: install through R-forge or manually, but require dependence packages to be installed using Bioconductor first:
+<<<install, echo=TRUE, eval=FALSE>>=
+if (!requireNamespace("BiocManager", quietly=TRUE))
+    install.packages("BiocManager")
+BiocManager::install(c("Rgraphviz", "png", "KEGGgraph", "org.Hs.eg.db"))
+@ 
+
+Then install \Rpackage{pathview} through R-forge.
+<<install, echo=TRUE, eval=FALSE>>=
+install.packages("pathview",repos="http://R-Forge.R-project.org")
+@ 
+
+Or install manually: download \Rpackage{pathview} package (from R-forge or Bioconductor, make sure with proper version number and zip format) and save to \verb@/your/local/directory/@.
+<<install, echo=TRUE, eval=FALSE>>=
+install.packages("/your/local/directory/pathview_1.0.0.tar.gz", 
+    repos = NULL, type = "source")
+@ 
+
+Note that there might be problems when installing \Rpackage{Rgraphviz} or \Rpackage{XML} (\Rpackage{KEGGgraph} dependency) package with outdated R/Biocondutor. \Rpackage{Rgraphviz} installation is a bit complicate with R 2.5 (Biocondutor 2.10) or earlier versions. Please check this  \href{http://pathview.r-forge.r-project.org/Rgraphviz.README}{Readme file} on \Rpackage{Rgraphviz}. On Windows systems,\Rpackage{XML} frequently needs to be installed manually. Its windows binary can be downloaded from \href{http://cran.r-project.org/web/packages/XML/index.html}{CRAN} and then:
+<<<install, echo=TRUE, eval=FALSE>>=
+install.packages("/your/local/directory/XML_3.95-0.2.zip", repos = NULL)
+@ 
+
+\section{Get Started}
+\label{sec:start}
+Under R, first we load the \Rpackage{pathview} package:
+
+<<start, echo=FALSE>>=
+options(width=80)
+@ 
+
+<<start, echo=TRUE, results=hide>>=
+library(pathview)
+@ 
+
+To see a brief overview of the package:
+<<start, echo=TRUE, eval=FALSE>>=
+library(help=pathview)
+@ 
+
+To get help on any function (say the main function, \R{pathview}), use the \R{help} command in either one of the following two forms:
+<<start, echo=TRUE, eval=FALSE>>=
+help(pathview)
+?pathview
+@ 
+
+\section{Common uses for data visualization}
+\label{sec:visualization}
+\Rpackage{Pathview} is primarily used for visualizing data on pathway graphs. \Rpackage{pathview} generates both native KEGG view (like \hyperref[fig:1]{Figure \ref*{fig:1}}) and Graphviz view (like \hyperref[fig:2]{Figure \ref*{fig:2}}). The former render user data on native KEGG pathway graphs, hence is natural and more readable for human. The latter layouts pathway graph using Graphviz engine, hence provides better control of node or edge attributes and pathway topology.
+
+We load and look at the demo microarray data first. This is a breast cancer dataset. Here we would like to view the pair-wise gene expression changes between DCIS (disease) and HN (control) samples. Note that the microarray data are log2 transformed. Hence expression changes are log2 ratios.
+<<dataPrep.gse16873, echo=TRUE>>=
+data(gse16873.d)
+@ 
+
+Here we assume that the input data are already read in R. If not, you may use R functions \Rfunction{read.delim}, \Rfunction{read.table} etc to read in your data. For example, you may read in a truncated version of gse16873 and process it as below.
+\label{code:readin}
+<<readin, echo=TRUE, eval=FALSE>>=
+filename=system.file("extdata/gse16873.demo", package = "pathview")
+gse16873=read.delim(filename, row.names=1)
+gse16873.d=gse16873[,2*(1:6)]-gse16873[,2*(1:6)-1]
+@ 
+
+We also load the demo pathway related data, which includes 3 pathway ids and related plotting parameters.
+<<dataPrep.demo.paths, echo=TRUE>>=
+data(demo.paths)
+@
+
+\label{subsec:paths}
+We may also check the full list of KEGG pathway ID/names if needed. We provide human pathway IDs (in the form of hsa+5 digits) mapping to pathway names. It is almost the same for other species, excpet for the 3 or 4 letter species code. Please check \hyperref[subsec:species]{Subsection \ref*{subsec:species}} for KEGG species code.
+<<dataPreppaths.hsa, echo=TRUE>>=
+data(paths.hsa)
+head(paths.hsa,3)
+@
+
+First, we view the exprssion changes of a single sample (pair) on a typical signaling pathway, "Cell Cycle", by specifying the \R{gene.data} and \R{pathway.id} (\hyperref[fig:1a]{Figure \ref*{fig:1a}}). The microarray was done on human tissue, hence \R{species = "hsa"}. Note that such native KEGG view was outupt as a raster image in a PNG file in your working directory.
+<<kegg.native, echo=TRUE>>=
+i <- 1
+pv.out <- pathview(gene.data = gse16873.d[, 1], pathway.id = demo.paths$sel.paths[i],
+                   species = "hsa", out.suffix = "gse16873", kegg.native = T)
+list.files(pattern="hsa04110", full.names=T)
+str(pv.out)
+head(pv.out$plot.data.gene)
+@ 
+
+
+Graph from the first example above has a single layer. Node colors were modified on the original graph layer, and original KEGG node labels (node names) were kept intact. This way the output file size is as small as the original KEGG PNG file, but the computing time is relative long. If we want a fast view and do not mind doubling the output file size, we may do a two-layer graph with \R{same.layer = F}  (\hyperref[fig:1b]{Figure \ref*{fig:1b}}). This way node colors and labels are added on an extra layer above the original KEGG graph. Notice that the original KEGG gene labels (or EC numbers) were replaced by official gene symbols.
+<<kegg.native_2layer, echo=TRUE>>=
+pv.out <- pathview(gene.data = gse16873.d[, 1], pathway.id = demo.paths$sel.paths[i],
+                   species = "hsa", out.suffix = "gse16873.2layer", kegg.native = T,
+                   same.layer = F)
+@ 
+
+
+
+\setlength\fboxsep{0pt}
+\setlength\fboxrule{0.5pt}
+\begin{figure}
+        \centering
+        \begin{subfigure}[b]{1.0\textwidth}
+                \centering
+                \fbox{\includegraphics[width=14cm,type=png,ext=.png,read=.png]{hsa04110.gse16873}}
+                \caption{}
+                \label{fig:1a}
+        \end{subfigure}
+        \\
+        \vspace{20pt}
+        \begin{subfigure}[b]{1.0\textwidth}
+                \centering
+                \fbox{\includegraphics[width=14cm,type=png,ext=.png,read=.png]{hsa04110.gse16873.2layer}}
+                \caption{}
+                \label{fig:1b}
+        \end{subfigure}
+        \\
+        \caption{Example native KEGG view on gene data with the (a) default settings; or (b) \R{same.layer=F}.}
+        \label{fig:1}
+\end{figure}
+
+
+\begin{figure} 
+\begin{center} 
+\includegraphics[width=16.5cm,type=pdf,ext=.pdf,read=.pdf]{hsa04110.gse16873}
+\caption{Example Graphviz view on gene data with default settings. Note that legend is put on the same page as main graph.}
+\label{fig:2}
+\end{center}  
+\end{figure} 
+
+In the above two examples, we view the data on native KEGG pathway graph. This view we get all notes and meta-data on the KEGG graphs, hence the data is more readable and interpretable. However, the output graph is a raster image in PNG format. We may also view the data with a \textit{de novo} pathway graph layout using Graphviz engine  (\hyperref[fig:2]{Figure \ref*{fig:2}}). The graph has the same set of nodes and edges, but with a different layout. We get more controls over the nodes and edge attributes and look. Importantly, the graph is a vector image in PDF format in your working directory. 
+
+<<graphviz, echo=TRUE>>=
+pv.out <- pathview(gene.data = gse16873.d[, 1], pathway.id = demo.paths$sel.paths[i],
+                   species = "hsa", out.suffix = "gse16873", kegg.native = F,
+                   sign.pos = demo.paths$spos[i])
+#pv.out remains the same
+dim(pv.out$plot.data.gene)
+head(pv.out$plot.data.gene)
+@ 
+
+In the example above, both main graph and legend were put in one layer (or page). We just list KEGG edge types and ignore node types in legend as to save space. If we want the complete legend, we can do a Graphviz view with two layers  (\hyperref[fig:3]{Figure \ref*{fig:3}}): page 1 is the main graph, page 2 is the legend. Note that for Graphviz view (PDF file), the concept of ``layer" is slightly different from native KEGG view (PNG file). In both cases, we set argument \R{same.layer=F} for two-layer graph.
+<<graphviz.2layer, echo=TRUE>>=
+pv.out <- pathview(gene.data = gse16873.d[, 1], pathway.id = demo.paths$sel.paths[i], 
+    species = "hsa", out.suffix = "gse16873.2layer", kegg.native = F, 
+    sign.pos = demo.paths$spos[i], same.layer = F)
+@ 
+
+\begin{figure}
+        \centering
+        \begin{subfigure}[b]{1.0\textwidth}
+                \centering
+                \includegraphics[width=11cm,type=pdf,ext=.pdf,read=.pdf,page=1]{hsa04110.gse16873.2layer}
+                \caption{page 1}
+                \label{fig:3a}
+        \end{subfigure}
+        \\
+        \vspace{20pt}
+        \begin{subfigure}[b]{1.0\textwidth}
+                \centering
+                \includegraphics[width=11cm,type=pdf,ext=.pdf,read=.pdf,page=2]{hsa04110.gse16873.2layer}
+                \caption{page 2}
+                \label{fig:3b}
+        \end{subfigure}
+        \\
+
+        \caption{Example Graphviz view on gene data with \R{same.layer=F}. Note that legend is put on a different page than main graph.}
+        \label{fig:3}
+\end{figure}
+
+\begin{figure}
+        \centering
+        \begin{subfigure}[b]{1.0\textwidth}
+                \centering
+                \includegraphics[width=16.5cm,type=pdf,ext=.pdf,read=.pdf,page=1]{hsa04110.gse16873.split}
+                \caption{}
+                \label{fig:4a}
+        \end{subfigure}
+        \\
+        \vspace{20pt}
+        \begin{subfigure}[b]{1.0\textwidth}
+                \centering
+                \includegraphics[width=16.5cm,type=pdf,ext=.pdf,read=.pdf,page=1]{hsa04110.gse16873.split.expanded}
+                \caption{}
+                \label{fig:4b}
+        \end{subfigure}
+        \\
+        \caption{Example Graphviz view on gene data with (a) \R{split.group = T}; or (b) \R{expand.node = T}.}
+        \label{fig:4}
+\end{figure}
+
+In Graphviz view, we have more control over the graph layout. We may split the node groups into individual detached nodes  (\hyperref[fig:4a]{Figure \ref*{fig:4a}}). We may even expand the multiple-gene nodes into individual genes  (\hyperref[fig:4b]{Figure \ref*{fig:4b}}). The split nodes or expanded genes may inherit the edges from the unsplit group or unexpanded nodes. This way we tend to get a gene/protein-gene/protein interaction network. And we may better view the network characteristics (modularity etc) and gene-wise (instead of node-wise) data. Note in native KEGG view, a gene node may represent multiple genes/proteins with similar or redundant functional role. The number of member genes range from 1 up to several tens. They are intentionally put together as a single node on pathway graphs for better clarity and readability. Therefore, we do not split node and mark each member genes separately by default. But rather we visualize the node-wise data by summarize gene-wise data, users may specify the summarization method using \R{node.sum} arguement. 
+<<split, echo=TRUE>>=
+pv.out <- pathview(gene.data = gse16873.d[, 1], pathway.id = demo.paths$sel.paths[i], 
+    species = "hsa", out.suffix = "gse16873.split", kegg.native = F, 
+    sign.pos = demo.paths$spos[i], split.group = T)
+dim(pv.out$plot.data.gene)
+head(pv.out$plot.data.gene)
+@ 
+
+<<expanded, echo=TRUE>>=
+pv.out <- pathview(gene.data = gse16873.d[, 1], pathway.id = demo.paths$sel.paths[i], 
+    species = "hsa", out.suffix = "gse16873.split.expanded", kegg.native = F,
+    sign.pos = demo.paths$spos[i], split.group = T, expand.node = T)
+dim(pv.out$plot.data.gene)
+head(pv.out$plot.data.gene)
+@ 
+
+
+\section{Data integration}
+\label{sec:integration}
+\Rpackage{Pathview} provides strong support for data integration. It can be used to integrate, analyze and visualize a wide variety of biological data (\hyperref[subsec:compound]{Subsection \ref*{subsec:compound}}): gene expression, protein expression, genetic association, metabolite, genomic data, literature, and other data types mappable to pathways. Notebaly, it can be directly used for metagenomic, microbiome or unknown species data when the data are mapped to KEGG ortholog pathways (\hyperref[subsec:species]{Subsection \ref*{subsec:species}}). The integrated Mapper module maps a variety of gene/protein IDs and compound/metabolite IDs to standard KEGG gene or compound IDs (\hyperref[subsec:ids]{Subsection \ref*{subsec:ids}}). User data named with any of these different ID types get accurately mapped to target KEGG pathways. Currently, \Rpackage{pathview} covers KEGG pathways for about 4800 species (\hyperref[subsec:species]{Subsection \ref*{subsec:species}}), and species can be specified either as KEGG code, scientific name or comon name. In addition, \Rpackage{pathview}  works with different data attributes and formats, both continuous and discrete data (\hyperref[subsec:discrete]{Subsection \ref*{subsec:discrete}}), either in matrix or vector format, with single or multiple samples/experiments etc. Partcullary, \Rpackage{Pathview} can now integrate and compare multiple samples or states into one graph (\hyperref[subsec:multiple]{Subsection \ref*{subsec:multiple}}).
+
+\subsection{Compound and gene data}
+\label{subsec:compound}
+In examples above, we viewed  gene data with canonical signaling pathways. We frequently want to look at metabolic pathways too. Besides gene nodes, these pathways also have compound nodes.  Therefore, we may integrate or visualize both gene data and compound data with metabolic pathways. Here gene data is a broad concept including genes, transcripts, protein , enzymes and their expression, modifications and any measurable attributes. Same is compound data, including metabolites, drugs, their measurements and attributes.
+Here we still use the breast cancer microarray dataset as gene data. We then generate simulated compound or metabolomic data, and load proper compound ID types (with sufficient number of unique entries) for demonstration.
+<<dataPrep.sim.cpd, echo=TRUE>>=
+sim.cpd.data=sim.mol.data(mol.type="cpd", nmol=3000)
+data(cpd.simtypes)
+@
+
+We generate a native KEGG view graph with both gene data and compound data  (\hyperref[fig:5a]{Figure \ref*{fig:5a}}). Such metabolic pathway graphs generated by \Rpackage{pathview} is the same as the original KEGG graphs, except that the compound nodes are magnified for better view of the colors.
+<<gene_cpd.data, echo=TRUE>>=
+i <- 3
+print(demo.paths$sel.paths[i])
+pv.out <- pathview(gene.data = gse16873.d[, 1], cpd.data = sim.cpd.data, 
+    pathway.id = demo.paths$sel.paths[i], species = "hsa", out.suffix = "gse16873.cpd", 
+    keys.align = "y", kegg.native = T, key.pos = demo.paths$kpos1[i])
+str(pv.out)
+head(pv.out$plot.data.cpd)
+@ 
+
+
+We also generate Graphviz view of the same pathway and data  (\hyperref[fig:5b]{Figure \ref*{fig:5b}}). Graphviz view better shows the hierarchical structure. For metabolic pathways, we need to parse the reaction entries from xml files and convert it to relationships between gene and compound nodes. We use ellipses for compound nodes. The labels are standard compound names, which are retrieved from CHEMBL database. KEGG does not provide it in the pathway database files. Chemical names are long strings, we need to do word wrap to fit them to specified width on the graph.
+<<graphviz.gene_cpd.data, echo=TRUE>>=
+pv.out <- pathview(gene.data = gse16873.d[, 1], cpd.data = sim.cpd.data, 
+    pathway.id = demo.paths$sel.paths[i], species = "hsa", out.suffix = "gse16873.cpd", 
+    keys.align = "y", kegg.native = F, key.pos = demo.paths$kpos2[i], 
+    sign.pos = demo.paths$spos[i], cpd.lab.offset = demo.paths$offs[i])
+@ 
+
+
+\begin{figure}
+        \centering
+        \begin{subfigure}[b]{1.0\textwidth}
+                \centering
+                \fbox{\includegraphics[width=15cm,type=png,ext=.png,read=.png]{hsa00640.gse16873.cpd}}
+                \caption{}
+                \label{fig:5a}
+        \end{subfigure}
+        \\
+        \vspace{20pt}
+        \begin{subfigure}[b]{1.0\textwidth}
+                \centering
+                \includegraphics[width=15cm,type=pdf,ext=.pdf,read=.pdf]{hsa00640.gse16873.cpd}
+                \caption{}
+                \label{fig:5b}
+        \end{subfigure}
+        \\
+        \caption{Example (a) KEGG view or (b) Graphviz view on both gene data and compound data simultaneously.}
+        \label{fig:5}
+\end{figure}
+
+\subsection{Multiple states or samples}
+\label{subsec:multiple}
+In all previous examples, we looked at single sample data, which are either vector or single-column matrix. \Rpackage{Pathview} also handles multiple sample data, it used to generate graph for each sample. Since version 1.1.6, \Rpackage{Pathview} can integrate and plot multiple samples or states into one graph (Figure \hyperref[fig:multi1]{\ref*{fig:multi1}} - \hyperref[fig:multi2]{\ref*{fig:multi2}}). 
+
+Let's simulate compound data with multiple replicate samples first.
+<<sim.cpd.data2, echo=TRUE>>=
+set.seed(10)
+sim.cpd.data2 = matrix(sample(sim.cpd.data, 18000, 
+    replace = T), ncol = 6)
+rownames(sim.cpd.data2) = names(sim.cpd.data)
+colnames(sim.cpd.data2) = paste("exp", 1:6, sep = "")
+head(sim.cpd.data2, 3)
+@ 
+
+In the following examples, \R{gene.data} has three samples while \R{cpd.data} has two. We may include all these samples in one graph. We can do either native KEGG view (\hyperref[fig:multi1]{Figure \ref*{fig:multi1}}) or Graphviz view (\hyperref[fig:multi2]{Figure \ref*{fig:multi2}})on such multiple-sample data. In these graphs, we see that the gene nodes and compound nodes are sliced into multiple pieces corresponding to different states or samples. Since the sample sizes are different for \R{gene.data} and \R{cpd.data}, we can choose to match the data if samples in the two data types are actually paired, i.e. first columns of for \R{gene.data} and \R{cpd.data} come from the same experiment/sample, and so on.
+
+<<multisample.gene_cpd.data, echo=TRUE>>=
+#KEGG view
+pv.out <- pathview(gene.data = gse16873.d[, 1:3], 
+    cpd.data = sim.cpd.data2[, 1:2], pathway.id = demo.paths$sel.paths[i], 
+    species = "hsa", out.suffix = "gse16873.cpd.3-2s", keys.align = "y", 
+    kegg.native = T, match.data = F, multi.state = T, same.layer = T)
+head(pv.out$plot.data.cpd)
+#KEGG view with data match
+pv.out <- pathview(gene.data = gse16873.d[, 1:3], 
+    cpd.data = sim.cpd.data2[, 1:2], pathway.id = demo.paths$sel.paths[i], 
+    species = "hsa", out.suffix = "gse16873.cpd.3-2s.match", 
+    keys.align = "y", kegg.native = T, match.data = T, multi.state = T, 
+    same.layer = T)
+#graphviz view
+pv.out <- pathview(gene.data = gse16873.d[, 1:3], 
+    cpd.data = sim.cpd.data2[, 1:2], pathway.id = demo.paths$sel.paths[i], 
+    species = "hsa", out.suffix = "gse16873.cpd.3-2s", keys.align = "y", 
+    kegg.native = F, match.data = F, multi.state = T, same.layer = T,
+    key.pos = demo.paths$kpos2[i], sign.pos = demo.paths$spos[i])
+@
+
+\begin{figure}
+        \centering
+        \begin{subfigure}[b]{1.0\textwidth}
+                \centering
+                \fbox{\includegraphics[width=15cm,type=png,ext=.png,read=.png]{hsa00640.gse16873.cpd.3-2s.multi}}
+                \caption{}
+                \label{fig:multi1a}
+        \end{subfigure}
+        \\
+        \vspace{20pt}
+        \begin{subfigure}[b]{1.0\textwidth}
+                \centering
+                \fbox{\includegraphics[width=15cm,type=png,ext=.png,read=.png]{hsa00640.gse16873.cpd.3-2s.match.multi}}
+                \caption{}
+                \label{fig:multi1b}
+        \end{subfigure}
+        \\
+        \caption{Example KEGG view on multiple states of both gene data and compound data simultaneously (a) without or (b) with matching the samples.}
+        \label{fig:multi1}
+\end{figure}
+
+\begin{figure} 
+\begin{center} 
+\includegraphics[width=16.5cm,type=pdf,ext=.pdf,read=.pdf]{hsa00640.gse16873.cpd.3-2s.multi}
+\caption{Example Graphviz view on multiple states of both gene data and compound data simultaneously.}
+\label{fig:multi2}
+\end{center}  
+\end{figure} 
+
+Again, we may choose to plot the samples separately, i.e. one sample per graph. Note that in this case, the samples in \R{gene.data} and \R{cpd.data} has to be matched as to be assigned to the same graph. Hence, argument \R{match.data} isn't really effective here.
+
+<<multisample.gene_cpd.data.seperate, echo=TRUE, eval=FALSE>>=
+#plot samples/states separately
+pv.out <- pathview(gene.data = gse16873.d[, 1:3], 
+    cpd.data = sim.cpd.data2[, 1:2], pathway.id = demo.paths$sel.paths[i], 
+    species = "hsa", out.suffix = "gse16873.cpd.3-2s", keys.align = "y", 
+    kegg.native = T, match.data = F, multi.state = F, same.layer = T)
+@ 
+
+As described above, KEGG views on the same layer may takes some time. Again, we can choose to do KEGG view with two layers as to speed up the process if we don't mind losing the original KEGG gene labels (or EC numbers).
+<<multisample.gene_cpd.data.2layer, echo=TRUE, eval=FALSE>>=
+pv.out <- pathview(gene.data = gse16873.d[, 1:3], 
+    cpd.data = sim.cpd.data2[, 1:2], pathway.id = demo.paths$sel.paths[i], 
+    species = "hsa", out.suffix = "gse16873.cpd.3-2s.2layer", 
+    keys.align = "y", kegg.native = T, match.data = F, multi.state = T, 
+    same.layer = F)
+@
+
+\subsection{Discrete data}
+\label{subsec:discrete}
+So far, we have been dealing with continuous data. But we often work with discrete data too. For instance, we select list of signficant genes or compound based on some statistics (p-value, fold change etc). The input data can be named vector of two levels, either 1 or 0 (signficant or not), or it can be a shorter list of signficant gene/compound names. In the next two examples, we made both \R{gene.data} and \R{cpd.data} or \R{gene.data} only  (\hyperref[fig:6]{Figure \ref*{fig:6}}) discrete.
+<<discrete.gene_cpd.data, echo=TRUE>>=
+require(org.Hs.eg.db)
+gse16873.t <- apply(gse16873.d, 1, function(x) t.test(x, 
+    alternative = "two.sided")$p.value)
+sel.genes <- names(gse16873.t)[gse16873.t < 0.1]
+sel.cpds <- names(sim.cpd.data)[abs(sim.cpd.data) > 0.5]
+pv.out <- pathview(gene.data = sel.genes, cpd.data = sel.cpds, 
+    pathway.id = demo.paths$sel.paths[i], species = "hsa", out.suffix = "sel.genes.sel.cpd", 
+    keys.align = "y", kegg.native = T, key.pos = demo.paths$kpos1[i], 
+    limit = list(gene = 5, cpd = 2), bins = list(gene = 5, cpd = 2), 
+    na.col = "gray", discrete = list(gene = T, cpd = T))
+pv.out <- pathview(gene.data = sel.genes, cpd.data = sim.cpd.data, 
+    pathway.id = demo.paths$sel.paths[i], species = "hsa", out.suffix = "sel.genes.cpd",
+    keys.align = "y", kegg.native = T, key.pos = demo.paths$kpos1[i], 
+    limit = list(gene = 5, cpd = 1), bins = list(gene = 5, cpd = 10), 
+    na.col = "gray", discrete = list(gene = T, cpd = F))
+@
+
+\begin{figure} 
+\begin{center} 
+\fbox{\includegraphics[width=15cm,type=png,ext=.png,read=.png]{hsa00640.sel.genes.cpd}}
+\caption{Example native KEGG view on discrete gene data and continuous compound data simultaneously.}
+\label{fig:6}
+\end{center}
+\end{figure} 
+
+
+\subsection{ID mapping}
+\label{subsec:ids}
+A distinguished feature of \Rpackage{pathview} is its strong ID mapping capability. The integrated Mapper module maps over 10 types of gene or protein IDs, and 20 types of compound or metabolite IDs to standard KEGG gene or compound IDs, and also maps between these external IDs. In other words, user data named with any of these different ID types get accurately mapped to target KEGG pathways. \Rpackage{Pathview} applies to pathways for about 4800 species, and species can be specified in multiple formats: KEGG code, scientific name or comon name.
+
+    The following example makes use of the integrated mapper to map external ID types to standard KEGG IDs automatically  (\hyperref[fig:7]{Figure \ref*{fig:7}}). We only need to specify the external ID types using \R{gene.idtype} and \R{cpd.idtype} arguments. Note that automatic mapping is limited to certain ID types. For details check: \R{gene.idtype.list} and \R{data(rn.list); names(rn.list)}.
+<<gene.ensprot_cpd.cas, echo=TRUE>>=
+cpd.cas <- sim.mol.data(mol.type = "cpd", id.type = cpd.simtypes[2], 
+    nmol = 10000)
+gene.ensprot <- sim.mol.data(mol.type = "gene", id.type = gene.idtype.list[4], 
+    nmol = 50000)
+pv.out <- pathview(gene.data = gene.ensprot, cpd.data = cpd.cas, 
+    gene.idtype = gene.idtype.list[4], cpd.idtype = cpd.simtypes[2], 
+    pathway.id = demo.paths$sel.paths[i], species = "hsa", same.layer = T, 
+    out.suffix = "gene.ensprot.cpd.cas", keys.align = "y", kegg.native = T, 
+    key.pos = demo.paths$kpos2[i], sign.pos = demo.paths$spos[i], 
+    limit = list(gene = 3, cpd = 3), bins = list(gene = 6, cpd = 6))
+@
+
+\begin{figure} 
+\begin{center} 
+\fbox{\includegraphics[width=15cm,type=png,ext=.png,read=.png]{hsa00640.gene.ensprot.cpd.cas}}
+\caption{Example native KEGG view on gene data and compound data with other ID types.}
+\label{fig:7}
+\end{center}
+\end{figure} 
+
+For external IDs not in the auto-mapping lists, we may make use of the \R{mol.sum} function (also part of the Mapper module) to do the ID and data mapping explicitly. Here we need to provide \R{id.map}, the mapping matrix between external ID and KEGG standard ID. We use ID mapping functions including \R{id2eg} and \R{cpdidmap} etc to get \R{id.map} matrix.  Note that these ID mapping functions can be used independent of \R{pathview} main function. The following example use this route with the simulated \R{gene.ensprot} and \R{cpd.kc} data above, and we get the same results (Figure not shown).
+<<gene.ensprot_cpd.cas.manual.map, echo=TRUE>>=
+id.map.cas <- cpdidmap(in.ids = names(cpd.cas), in.type = cpd.simtypes[2], 
+    out.type = "KEGG COMPOUND accession")
+cpd.kc <- mol.sum(mol.data = cpd.cas, id.map = id.map.cas)
+id.map.ensprot <- id2eg(ids = names(gene.ensprot), 
+    category = gene.idtype.list[4], org = "Hs")
+gene.entrez <- mol.sum(mol.data = gene.ensprot, id.map = id.map.ensprot)
+pv.out <- pathview(gene.data = gene.entrez, cpd.data = cpd.kc, 
+    pathway.id = demo.paths$sel.paths[i], species = "hsa", same.layer = T, 
+    out.suffix = "gene.entrez.cpd.kc", keys.align = "y", kegg.native = T, 
+    key.pos = demo.paths$kpos2[i], sign.pos = demo.paths$spos[i], 
+    limit = list(gene = 3, cpd = 3), bins = list(gene = 6, cpd = 6))
+@ 
+
+\subsection{Working with species}
+\label{subsec:species}
+Species is a tricky yet important issue when working with KEGG. KEGG has its own dedicated nomenclature and database for species, which includes about 4800 organisms with complete genomes. In other words, gene data for any of these organisms can be mapped, visualized and analyzed using \Rpackage{pathview}. This comprehensive species coverage is a prominent feature of \Rpackage{pathview}'s data integration capacity. However, KEGG does not treat all of these organisms/genomes the same way. KEGG use NCBI GeneID (or Entrez Gene) as the default ID for the most common model animals, including human, mouse, rat etc and a few crops, e.g. soybean, wine grape and maize. On the other hand, KEGG uses Locus tag and other IDs for all others organisms, including animals, plants, fungi, protists, as well as bacteria and archaea.
+
+\Rpackage{Pathview} carries a data matrix \R{korg}, which includes a complete list of supported KEGG species and default gene IDs. Let's explore \R{korg} data matrix as to have some idea on KEGG species and its Gene ID usage.
+<<korg, echo=TRUE>>=
+data(korg)
+head(korg)
+#number of species which use Entrez Gene as the default ID
+sum(korg[,"entrez.gnodes"]=="1",na.rm=T)
+#number of species which use other ID types or none as the default ID
+sum(korg[,"entrez.gnodes"]=="0",na.rm=T)
+#new from 2017: most species which do not have Entrez Gene annotation any more
+na.idx=is.na(korg[,"ncbi.geneid"])
+sum(na.idx)
+@ 
+
+From the exploration of \R{korg} above, we see that out of the ~4800 KEGG species, only a few don't have NCBI (Entrez) Gene ID or any gene ID (annotation) at all. Almost all of them have both default KEGG gene ID (often Locus tag) and Entrez Gene ID annotation. Therefore, \R{pathview} accepts \R{gene.idtype="kegg"} or \R{"Entrez"} (case insensitive) for all these species. The users need to make sure the right \R{gene.idtype} is specified because KEGG and Entrez Gene IDs are not the same except for 35 common species. For 19 species, Bioconductor provides gene annotation packages. The users have the freedom to input \R{gene.data} with other \R{gene.idtype}'s. For a list of these Bioconductor annotated species and extra Gene ID types allowed:
+<<bods_gene.idtype.list, echo=TRUE>>=
+data(bods)
+bods
+data(gene.idtype.list)
+gene.idtype.list
+@ 
+
+All previous examples show human data, where Entrez Gene is KEGG's default gene ID. \Rpackage{Pathview} now (since version 1.1.5) explicitly handles species which use Locus tag or other gene IDs as the KEGG default ID. Below are an couple of examples with E coli strain K12 data. First, we work on gene data with the default KEGG ID (Locus tag) for E coli K12.
+<<eco.dat.kegg, echo=TRUE>>=
+eco.dat.kegg <- sim.mol.data(mol.type="gene",id.type="kegg",species="eco",nmol=3000)
+head(eco.dat.kegg)
+pv.out <- pathview(gene.data = eco.dat.kegg, gene.idtype="kegg",
+    pathway.id = "00640", species = "eco", out.suffix = "eco.kegg",
+    kegg.native = T, same.layer=T)
+@ 
+
+We may also work on gene data with Entrez Gene ID for E coli K12 the same way as for human.
+<<eco.dat.kegg, echo=TRUE>>=
+eco.dat.entrez <- sim.mol.data(mol.type="gene",id.type="entrez",species="eco",nmol=3000)
+head(eco.dat.entrez)
+pv.out <- pathview(gene.data = eco.dat.entrez, gene.idtype="entrez",
+    pathway.id = "00640", species = "eco", out.suffix = "eco.entrez",
+    kegg.native = T, same.layer=T)
+@ 
+
+Based on the \R{bods} data described above, E coli K12 is an Bioconductor annotated species. Hence we may further work on its gene data with other ID types, for example, official gene symbols. When calling \R{pathview}, such data need to be mapped to Entrez Gene ID first (if not yet), then to default KEGG ID (Locus tag). Therefore, it takes longer time than the last example.
+<<eco.dat.symbol, echo=TRUE, eval=FALSE>>=
+egid.eco=eg2id(names(eco.dat.entrez), category="symbol", pkg="org.EcK12.eg.db")
+eco.dat.symbol <- eco.dat.entrez
+names(eco.dat.symbol) <- egid.eco[,2]
+head(eco.dat.kegg)
+pv.out <- pathview(gene.data = eco.dat.symbol, gene.idtype="symbol",
+    pathway.id = "00640", species = "eco", out.suffix = "eco.symbol.2layer",
+    kegg.native = T, same.layer=F)
+@
+
+Importantly, \Rpackage{pathview} can be directly used for metagenomic or microbiome data when the data are mapped to KEGG ortholog pathways. And data from any new species that has not been annotated and included in KEGG (non-KEGG species) can also been analyzed and visualized using \Rpackage{pathview} by mapping to KEGG ortholog pathways the same way. In the next example, we simulate the mapped KEGG ortholog gene data first. Then the data is input as \R{gene.data} with \R{species="ko"}. Check \R{pathview} function for details.
+<<gene.ensprot_cpd.cas.manual.map, echo=TRUE>>=
+ko.data=sim.mol.data(mol.type="gene.ko", nmol=5000)
+pv.out <- pathview(gene.data = ko.data, pathway.id = "04112",
+                   species = "ko", out.suffix = "ko.data", kegg.native = T)
+@ 
+
+
+\section{Integrated workflow with pathway analysis}
+\label{sec:workflow}
+Although built as a stand alone program, \Rpackage{Pathview} may seamlessly integrate with pathway and functional analysis tools for large-scale and fully automated analysis pipeline. The next example shows how to connect common pathway analysis to results rendering with \Rpackage{pathview}. The pathway analysis was done using another Bioconductor package \Rpackage{gage} \citep{luo:etal:2009}, and the selected signficant pathways plus the expression data were then piped to \Rpackage{pathview} for auomated results visualization (Figure not shown).  In \Rpackage{gage} package, vignette \href{http://bioconductor.org/packages/release/bioc/vignettes/gage/inst/doc/RNA-seqWorkflow.pdf}{"RNA-Seq Data Pathway and Gene-set Analysis Workflows"} demonstrates GAGE/Pathview workflows on RNA-seq (and microarray) pathway analysis. Note \href{https://pathview.uncc.edu/}{the Pathview Web server} provides a comprehensive workflow for both regular and integrated pathway analysis of multiple omics data \citep{luo:etal:2017}, as shown in \href{https://pathview.uncc.edu/example4}{Example 4 online}. 
+<<GAGE.Pathview.pipeline, echo=TRUE, eval=FALSE>>=
+library(gage)
+data(gse16873)
+cn <- colnames(gse16873)
+hn <- grep('HN',cn, ignore.case =TRUE)
+dcis <- grep('DCIS',cn, ignore.case =TRUE)
+data(kegg.gs)
+#pathway analysis using gage
+gse16873.kegg.p <- gage(gse16873, gsets = kegg.gs,
+    ref = hn, samp = dcis)
+#prepare the differential expression data
+gse16873.d <- gagePrep(gse16873, ref = hn, samp = dcis)
+#equivalently, you can do simple subtraction for paired samples
+gse16873.d <- gse16873[,dcis]-gse16873[,hn]
+#select significant pathways and extract their IDs
+sel <- gse16873.kegg.p$greater[, "q.val"] < 0.1 & !is.na(gse16873.kegg.p$greater[, 
+    "q.val"])
+path.ids <- rownames(gse16873.kegg.p$greater)[sel]
+path.ids2 <- substr(path.ids[c(1, 2, 7)], 1, 8)
+#pathview visualization
+pv.out.list <- sapply(path.ids2, function(pid) pathview(gene.data = gse16873.d[, 
+    1:2], pathway.id = pid, species = "hsa")) 
+@ 
+
+
+\section{Common Errors}
+\label{sec:errors}
+\begin{itemize}
+\item mismatch between the IDs for \R{gene.data} (or \R{cpd.data}) and \R{gene.idtype} (or \R{cpd.idtype}). For example, \R{gene.data} or \R{cpd.data} uses some extern ID types, while \R{gene.idtype = "entrez"} and \R{cpd.idtype = "kegg"} (default).
+\item mismatch between \R{gene.data} (or \R{cpd.data}) and \R{species}. For example, \R{gene.data} come from "mouse", while \R{species="hsa"}.
+\item \R{pathway.id} wrong or wrong format, right format should be a five digit number, like 04110, 00620 etc.
+\item any of \R{limit, bins, both.dir, trans.fun, discrete, low, mid, high} arguments is specified as a vector of length 1 or 2, instead of a list of 2 elements. Correct format should be like \R{limit = list(gene = 1, cpd = 1)}.
+\item \R{key.pos} or \R{sign.pos} not good, hence the color key or signature overlaps with pathway main graph. 
+\item \textbf{Special Note}: some KEGG xml data files are incomplete, inconsistent with corresponding png image or inaccurate/incorrect on some parts. These issues may cause inaccuracy, incosistency, or error messages although \Rpackage{pathview} tries the best to accommodate them. For instance, we may see inconistence between KEGG view and Graphviz view. As in the latter case, the pathway layout is generated based on data from xml file. 
+\end{itemize}
+
+
+\bibliographystyle{plainnat}
+\bibliography{pathview}
+
+\end{document}
+
