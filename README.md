@@ -20,10 +20,10 @@ Please cite the Pathview paper when using this open-source  package. This will h
 
 Luo W, Brouwer C. Pathview: an R/Biocondutor package for pathway-based data integration and visualization. Bioinformatics, 2013, 29(14):1830-1831, <a href=https://doi.org/10.1093/bioinformatics/btt285>doi: 10.1093/bioinformatics/btt285</a>
 
-## Installation
+## Installation (within R)
 
 ``` r
-# install from BioConductor (within R)
+# install from BioConductor
 if(!requireNamespace("BiocManager", quietly = TRUE))
     install.packages("BiocManager")
 BiocManager::install("pathview")
