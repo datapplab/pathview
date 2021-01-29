@@ -1,3 +1,5 @@
+utils::globalVariables("KEGGEdgeSubtype")
+
 kegg.legend=function (type=c("both", "edge", "node")[1]) {
   if(!type %in% c("both", "edge", "node")){
     msg.fmt="type has to be one of: \"%s\", \"%s\" and \"%s\"!"
@@ -5,9 +7,9 @@ kegg.legend=function (type=c("both", "edge", "node")[1]) {
     message("Note: ", msg)
     return(invisible(0))
   }
-  if (!exists("KEGGEdgeSubtype")) {
-    data(KEGGEdgeSubtype)
-  }
+#  if (!exists("KEGGEdgeSubtype")) {
+#    data(KEGGEdgeSubtype)
+#  }
   KEGGEdgeSubtype <- KEGGEdgeSubtype[-7,]
   levels(KEGGEdgeSubtype$name)[13]="others/unknown"
   subtypes <- KEGGEdgeSubtype$name

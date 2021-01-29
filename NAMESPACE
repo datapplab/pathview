@@ -11,7 +11,7 @@ importClassesFrom(AnnotationDbi,AnnotationDb)
 importFrom(org.Hs.eg.db, org.Hs.eg.db)
 
 importFrom(png, readPNG)
-importFrom(utils, data, installed.packages, read.delim)
+importFrom(utils, data, installed.packages, read.delim, globalVariables)
 importFrom(XML, xmlAttrs, xmlChildren, xmlName, xmlRoot, xmlTreeParse)
 importFrom(grDevices, col2rgb, dev.off, pdf, png, rgb)
 importFrom(graphics, image, layout, par, polygon,

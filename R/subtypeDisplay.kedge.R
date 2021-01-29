@@ -1,3 +1,5 @@
+utils::globalVariables("KEGGEdgeSubtype")
+
 subtypeDisplay.kedge <-
 function (object, ...) 
 {
