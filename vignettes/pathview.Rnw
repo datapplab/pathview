@@ -62,6 +62,8 @@ pv.out <- pathview(gene.data = gse16873.d[, 1], pathway.id = "04110",
 
 If you have difficulties in using R in general, you may use the \href{https://pathview.uncc.edu/}{Pathview Web server: pathview.uncc.edu}. In addition to a user friendly access, \href{https://pathview.uncc.edu/}{the server} provides many extra useful features including \href{https://pathview.uncc.edu/example4}{a comprehensive pathway analysis workflow}. Please check \href{https://pathview.uncc.edu/overview}{the overview page} and \href{https://academic.oup.com/nar/article-lookup/doi/10.1093/nar/gkx372}{the NAR web server paper} \citep{luo:etal:2017} for details. 
 
+Note \Rpackage{pathview} focuses on KEGG pathways, which is good for most regular analyses. If you are interested in working with other major pathway databases, including Reactome, MetaCyc, SMPDB, PANTHER, METACROP etc, you can use \href{https://github.com/datapplab/SBGNview}{\Rpackage{SBGNview}}. \href{https://github.com/datapplab/SBGNview}{\Rpackage{SBGNview}} covers 5,200 reference pathways and over 3,000 species by default, and offer more extensive graphics control, sub-pathway highlight, and more. Please check \href{https://github.com/datapplab/SBGNview}{the quick start  page} and \href{https://bioconductor.org/packages/devel/bioc/vignettes/SBGNview/inst/doc/SBGNview.Vignette.html}{the main tutorial} for details. 
+
 \section{New features}
 \label{sec:news}
 \Rpackage{Pathview} ($\ge1.5.4$) provides paths.hsa data, the full list of human pathway ID/names from KEGG, as to help user specify target pathway IDs when calling \R{pathview}. Please check \hyperref[subsec:paths]{Section Common uses} for details.
@@ -93,7 +95,7 @@ This vignette is written by assuming the user has minimal R/Bioconductor knowled
 
 \section{Installation}
 \label{sec:installation}
-Assume R and Bioconductor have been correctly installed and accessible under current directory. Otherwise, please contact your system admin or follow the instructions on \href{http://www.r-project.org/}{R website} and \href{http://www.bioconductor.org/install/}{Bioconductor website}. Here I would strongly recommend users to install or upgrade to the latest verison of R (3.0.2+)/Bioconductor (2.14+) for simpler installation and better use of \Rpackage{Pathview}.
+Assume R and Bioconductor have been correctly installed and accessible under current directory. Otherwise, please contact your system admin or follow the instructions on \href{http://www.r-project.org/}{R website} and \href{http://www.bioconductor.org/install/}{Bioconductor website}. Here I would strongly recommend users to install or upgrade to the latest verison of R (3.0.2+)/Bioconductor (2.14+) for simpler installation and better use of \Rpackage{Pathview}. You may need to update your \Rfunction{biocLite} too if you upgrade R/Biocondutor under Windows.
 
 Start R: from Linux/Unix command line, type \verb@R@ (Enter); for Mac or Windows GUI, double click the R application icon to enter R console.
 
@@ -101,18 +103,16 @@ End R: type in \R{q()} when you are finished with the analysis using R, but not 
 
 Two options:
 
-Simple way: install with Bioconductor (this included all dependencies automatically too):
+Simple way: install with Bioconductor installation script \R{biocLite} directly (this included all dependencies automatically too):
 <<install, echo=TRUE, eval=FALSE>>=
-if (!requireNamespace("BiocManager", quietly=TRUE))
-    install.packages("BiocManager")
-BiocManager::install("pathview")
+source("http://bioconductor.org/biocLite.R")
+biocLite("pathview")
 @ 
 
-Or a bit more complex: install through R-forge or manually, but require dependence packages to be installed using Bioconductor first:
+Or a bit more complexer: install through R-forge or manually, but require dependence packages to be installed using Bioconductor first:
 <<<install, echo=TRUE, eval=FALSE>>=
-if (!requireNamespace("BiocManager", quietly=TRUE))
-    install.packages("BiocManager")
-BiocManager::install(c("Rgraphviz", "png", "KEGGgraph", "org.Hs.eg.db"))
+source("http://bioconductor.org/biocLite.R")
+biocLite(c("Rgraphviz", "png", "KEGGgraph", "org.Hs.eg.db"))
 @ 
 
 Then install \Rpackage{pathview} through R-forge.
@@ -590,6 +590,9 @@ pv.out <- pathview(gene.data = ko.data, pathway.id = "04112",
 \section{Integrated workflow with pathway analysis}
 \label{sec:workflow}
 Although built as a stand alone program, \Rpackage{Pathview} may seamlessly integrate with pathway and functional analysis tools for large-scale and fully automated analysis pipeline. The next example shows how to connect common pathway analysis to results rendering with \Rpackage{pathview}. The pathway analysis was done using another Bioconductor package \Rpackage{gage} \citep{luo:etal:2009}, and the selected signficant pathways plus the expression data were then piped to \Rpackage{pathview} for auomated results visualization (Figure not shown).  In \Rpackage{gage} package, vignette \href{http://bioconductor.org/packages/release/bioc/vignettes/gage/inst/doc/RNA-seqWorkflow.pdf}{"RNA-Seq Data Pathway and Gene-set Analysis Workflows"} demonstrates GAGE/Pathview workflows on RNA-seq (and microarray) pathway analysis. Note \href{https://pathview.uncc.edu/}{the Pathview Web server} provides a comprehensive workflow for both regular and integrated pathway analysis of multiple omics data \citep{luo:etal:2017}, as shown in \href{https://pathview.uncc.edu/example4}{Example 4 online}. 
+
+Note \Rpackage{pathview} focuses on KEGG pathways, which is good for most regular analyses. If you are interested in working with other major pathway databases, including Reactome, MetaCyc, SMPDB, PANTHER, METACROP etc, you can use \href{https://github.com/datapplab/SBGNview}{\Rpackage{SBGNview}}. Please check \href{https://github.com/datapplab/SBGNview}{the quick start  page} and \href{https://bioconductor.org/packages/devel/bioc/vignettes/SBGNview/inst/doc/SBGNview.Vignette.html}{the main tutorial} for details. Also see \href{https://bioconductor.org/packages/devel/bioc/vignettes/SBGNview/inst/doc/pathway.enrichment.analysis.html}{SBGNview + GAGE based pathway analysis workflow}.
+
 <<GAGE.Pathview.pipeline, echo=TRUE, eval=FALSE>>=
 library(gage)
 data(gse16873)
@@ -610,8 +613,8 @@ sel <- gse16873.kegg.p$greater[, "q.val"] < 0.1 & !is.na(gse16873.kegg.p$greater
 path.ids <- rownames(gse16873.kegg.p$greater)[sel]
 path.ids2 <- substr(path.ids[c(1, 2, 7)], 1, 8)
 #pathview visualization
-pv.out.list <- sapply(path.ids2, function(pid) pathview(gene.data = gse16873.d[, 
-    1:2], pathway.id = pid, species = "hsa")) 
+pv.out.list <- pathview(gene.data = gse16873.d[, 1:3], pathway.id = path.ids2, 
+    species = ``hsa'')
 @ 
 
 

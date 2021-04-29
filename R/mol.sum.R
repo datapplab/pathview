@@ -20,18 +20,19 @@ function(mol.data, id.map, gene.annotpkg="org.Hs.eg.db", sum.method=c("sum","mea
   }
   
   sel.idx=id.map[,2]>"" & !is.na(id.map[,2])
-  id.map=id.map[sel.idx,]
+  id.map=id.map[sel.idx,,drop=F]
   eff.idx=gd.names %in% id.map[,1]
   mapped.ids=id.map[match(gd.names[eff.idx], id.map[,1]),2]
   if(sum(eff.idx)<1) stop("no ID can be mapped!")
   else if(sum(eff.idx)==1){
-    mapped.data=rbind(cbind(mol.data)[eff.idx,])
+    mapped.data=cbind(mol.data)[eff.idx,,drop=F] #rbind(cbind(mol.data)[eff.idx,])
     rownames(mapped.data)=mapped.ids[1]
   }
   else{
     if(sum.method %in% c("sum","mean")){
       sum.method=eval(as.name(sum.method))
-      mapped.data=apply(cbind(cbind(mol.data)[eff.idx,]),2,function(x){
+#      mapped.data=apply(cbind(cbind(mol.data)[eff.idx,]),2,function(x){      
+      mapped.data=apply(cbind(mol.data)[eff.idx,,drop=F],2,function(x){
         sum.res=tapply(x, mapped.ids, sum.method, na.rm=T)
         return(sum.res)
       })
@@ -44,7 +45,7 @@ function(mol.data, id.map, gene.annotpkg="org.Hs.eg.db", sum.method=c("sum","mea
       }
     } else{
     sum.method=eval(as.name(sum.method))
-    mol.data=cbind(cbind(mol.data)[eff.idx,])
+    mol.data=cbind(mol.data)[eff.idx,,drop=F] #cbind(cbind(mol.data)[eff.idx,])
     if(all(mol.data>=0) | all(mol.data<=0)){
       vars=apply(cbind(mol.data), 1, IQR)
     } else vars=apply(cbind(mol.data), 1, sum, na.rm=T)
@@ -54,8 +55,9 @@ function(mol.data, id.map, gene.annotpkg="org.Hs.eg.db", sum.method=c("sum","mea
       if(length(x)==1) return(x)
       else return(x[which.min(abs(vars[x]-sum.method(vars[x], na.rm=T)))])
     })
-    if(length(sel.rn)>1) mapped.data=cbind(mol.data[sel.rn,])
-    else mapped.data=rbind(mol.data[sel.rn,])
+#    if(length(sel.rn)>1) mapped.data=cbind(mol.data[sel.rn,])
+#    else mapped.data=mol.data[sel.rn,,drop=F] #rbind(mol.data[sel.rn,])
+    mapped.data=mol.data[sel.rn,,drop=F]
     rownames(mapped.data)=names(sel.rn)
   }
 }

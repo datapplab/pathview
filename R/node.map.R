@@ -65,7 +65,8 @@ if(is.null(mol.data)){
         } else {
           node.sum=eval(as.name(node.sum))
                                         #      edata=apply(cbind(mol.data[as.character(items[hit]),]), 2, node.sum, na.rm=T)
-          edata=apply(cbind(mol.data[as.character(items[hit]),]), 2, function(x){
+#          edata=apply(cbind(mol.data[as.character(items[hit]),]), 2, function(x){
+          edata=apply(mol.data[as.character(items[hit]),,drop=F], 2, function(x){
             x=x[!is.na(x)]
             if(length(x)<1) return(NA)
             else return(node.sum(x, na.rm=F))

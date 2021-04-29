@@ -1,8 +1,8 @@
 
 # pathview R package
 
-[![](https://img.shields.io/badge/release%20version-1.28.1-blue.svg)](https://www.bioconductor.org/packages/pathview)
-[![](https://img.shields.io/badge/devel%20version-1.29.1-green.svg)](https://github.com/datapplab/pathview)
+[![](https://img.shields.io/badge/release%20version-1.30.3-blue.svg)](https://www.bioconductor.org/packages/pathview)
+[![](https://img.shields.io/badge/devel%20version-1.31.3-green.svg)](https://github.com/datapplab/pathview)
 [![](https://img.shields.io/badge/BioC%20since-2013-blue.svg)](https://www.bioconductor.org/packages/pathview)
 [![](https://img.shields.io/badge/GitHub%20since-2020-green.svg)](https://github.com/datapplab/pathview)
 
@@ -34,6 +34,8 @@ devtools::install_github("datapplab/pathview")
 ```
 
 ## Quick start with demo data (R code)
+
+Note Pathview focuses on KEGG pathways, which is good for most regular analyses. If you are interested in working with other major pathway databases, including Reactome, MetaCyc, SMPDB, PANTHER, METACROP etc, you can use [SBGNview](https://github.com/datapplab/SBGNview). Please check [the quick start  page](https://github.com/datapplab/SBGNview) and [the main tutorial](https://bioconductor.org/packages/devel/bioc/vignettes/SBGNview/inst/doc/SBGNview.Vignette.html) for details.
 
 ``` r
 library(pathview)

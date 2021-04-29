@@ -1,3 +1,10 @@
+VERSION 1.31.3/1.30.3
+-------------
+
+  o fix bug in mol.sum with single gene data reported by
+    easygsea. Similarly add drop=F to a few other lines in mol.sum and
+    node.map.
+  
 VERSION 1.31.2/1.30.2
 -------------
 
