@@ -614,7 +614,7 @@ path.ids <- rownames(gse16873.kegg.p$greater)[sel]
 path.ids2 <- substr(path.ids[c(1, 2, 7)], 1, 8)
 #pathview visualization
 pv.out.list <- pathview(gene.data = gse16873.d[, 1:3], pathway.id = path.ids2, 
-    species = ``hsa'')
+    species = "hsa")
 @ 
 
 
