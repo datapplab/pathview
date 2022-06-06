@@ -19,8 +19,8 @@ download.kegg <-
     png.fnames=paste(pathway.id, ".png", sep="")
     ##      xml.fmt="http://www.genome.jp/kegg-bin/download?entry=%s&format=kgml"
     ##      png.fmt="http://www.genome.jp/kegg/pathway/%s/%s"
-    xml.fmt="http://rest.kegg.jp/get/%s/kgml"
-    png.fmt="http://rest.kegg.jp/get/%s/image"
+    xml.fmt="https://rest.kegg.jp/get/%s/kgml"
+    png.fmt="https://rest.kegg.jp/get/%s/image"
     all.status=rep("succeed", npath)
     names(all.status)=pathway.id
     warn.fmt.xml="Download of %s xml file failed!\nThis pathway may not exist!"
