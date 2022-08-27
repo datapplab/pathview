@@ -1,3 +1,12 @@
+VERSION 1.37.1/1.36.1
+-------------
+
+  o fix bug in download.kegg caused by recent change in kegg rest API
+    urls (http to https).
+  
+  o korg now include 8282 KEGG species or 1449 new species beyond 2020.
+
+
 VERSION 1.31.3/1.30.3
 -------------
 
