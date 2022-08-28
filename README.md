@@ -1,8 +1,8 @@
 
 # pathview R package
 
-[![](https://img.shields.io/badge/release%20version-1.30.3-blue.svg)](https://www.bioconductor.org/packages/pathview)
-[![](https://img.shields.io/badge/devel%20version-1.31.3-green.svg)](https://github.com/datapplab/pathview)
+[![](https://img.shields.io/badge/release%20version-1.36.1-blue.svg)](https://www.bioconductor.org/packages/pathview)
+[![](https://img.shields.io/badge/devel%20version-1.37.1-green.svg)](https://github.com/datapplab/pathview)
 [![](https://img.shields.io/badge/BioC%20since-2013-blue.svg)](https://www.bioconductor.org/packages/pathview)
 [![](https://img.shields.io/badge/GitHub%20since-2020-green.svg)](https://github.com/datapplab/pathview)
 
