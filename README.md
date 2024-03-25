@@ -1,8 +1,8 @@
 
 # pathview R package
 
-[![](https://img.shields.io/badge/release%20version-1.36.1-blue.svg)](https://www.bioconductor.org/packages/pathview)
-[![](https://img.shields.io/badge/devel%20version-1.37.1-green.svg)](https://github.com/datapplab/pathview)
+[![](https://img.shields.io/badge/release%20version-1.42.0-blue.svg)](https://www.bioconductor.org/packages/pathview)
+[![](https://img.shields.io/badge/devel%20version-1.43.1-green.svg)](https://github.com/datapplab/pathview)
 [![](https://img.shields.io/badge/BioC%20since-2013-blue.svg)](https://www.bioconductor.org/packages/pathview)
 [![](https://img.shields.io/badge/GitHub%20since-2020-green.svg)](https://github.com/datapplab/pathview)
 
@@ -10,7 +10,7 @@
 
 Pathview is a leading tool for pathway based data integration and visualization. It maps, integrates and renders a wide variety of biological data on relevant pathway graphs. Pathview has 3 important features: 
 * Interpretable graphs with publication quality: KEGG view for easy interpretation and Graphviz view for better graphical control. 
-* Strong data integration capacity. It works with: 1) all data mappable to pathways, 2) 30 of molecular ID types (genes/protein, compound/metabolite), 3) 5000+ species, 4) various data attributes and formats. 
+* Strong data integration capacity. It works with: 1) all data mappable to pathways, 2) 30 of molecular ID types (genes/protein, compound/metabolite), 3) ~10000 species, 4) various data attributes and formats. 
 * Simple and powerful: fully automated and error-resistant, seamlessly integrates with a wide range of pathway and gene set (enrichment) analysis tools.
 
 

@@ -1,6 +1,6 @@
 %\VignetteIndexEntry{Pathview: pathway based data integration and visualization}
 %\VignetteDepends{org.Hs.eg.db}
-%\VignetteSuggests{gage, org.Mm.eg.db}
+%\VignetteSuggests{gage, org.Mm.eg.db, org.EcK12.eg.db}
 %\VignettePackage{pathview}
 
 \documentclass[11pt]{article}

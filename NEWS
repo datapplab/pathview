@@ -1,3 +1,11 @@
+VERSION 1.43.1
+-------------
+
+  o add org.EcK12.eg.db to Suggests for BioC build check
+  
+  o korg now include 9767 KEGG species or 1485 new species beyond 2022.
+
+
 VERSION 1.37.1/1.36.1
 -------------
 
