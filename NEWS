@@ -1,3 +1,13 @@
+VERSION 1.47.1
+-------------
+
+  o fix "R CMD check" error caused by some problem in org.EcK12.eg.db
+  
+  o remove org.EcK12.eg.db from Suggests for BioC build check
+  
+  o korg now include 10718 KEGG species or 951 new species beyond March 2024.
+
+
 VERSION 1.43.1
 -------------
 

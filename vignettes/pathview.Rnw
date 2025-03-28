@@ -1,6 +1,6 @@
 %\VignetteIndexEntry{Pathview: pathway based data integration and visualization}
 %\VignetteDepends{org.Hs.eg.db}
-%\VignetteSuggests{gage, org.Mm.eg.db, org.EcK12.eg.db}
+%\VignetteSuggests{gage, org.Mm.eg.db}
 %\VignettePackage{pathview}
 
 \documentclass[11pt]{article}
@@ -559,8 +559,8 @@ pv.out <- pathview(gene.data = eco.dat.kegg, gene.idtype="kegg",
     kegg.native = T, same.layer=T)
 @ 
 
-We may also work on gene data with Entrez Gene ID for E coli K12 the same way as for human.
-<<eco.dat.kegg, echo=TRUE>>=
+We may also work on gene data with Entrez Gene ID for E coli K12 the same way as for human. Note this part may not work as org.EcK12.eg.db had some problem from BioC 3.21.
+<<eco.dat.entrez, echo=TRUE, eval=FALSE>>=
 eco.dat.entrez <- sim.mol.data(mol.type="gene",id.type="entrez",species="eco",nmol=3000)
 head(eco.dat.entrez)
 pv.out <- pathview(gene.data = eco.dat.entrez, gene.idtype="entrez",
